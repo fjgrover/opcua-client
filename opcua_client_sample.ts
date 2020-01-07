@@ -33,16 +33,16 @@ async function main() {
 	try {
     // step 1 : connect to
         await client.connect( endpointUrl );
-        console.log( "connected !" );
+        console.log( "connected!" );
 
     // step 2 : createSession
         const session = await client.createSession();
-        console.log( "session created !" );
+        console.log( "session created!" );
 
     // step 3 : browse
         const browseResult = await session.browse( "RootFolder" );
     
-        console.log( "references of Root :" );
+        console.log( "references of Root: " );
         for( const reference of browseResult.references ) {
             console.log( "   -> ", reference.browseName.toString() );
         }
@@ -50,7 +50,7 @@ async function main() {
 
     // step 4 : read a variable with readVariableValue
         const dataValue2 = await session.readVariableValue( "ns=4;s=|var|p500.Application.HMI.RUNNING" );
-        console.log( " value = " , dataValue2.toString() );
+        console.log( "value = " , dataValue2.toString() );
 
     // step 4' : read a variable with read
         const maxAge = 0;
@@ -72,7 +72,7 @@ async function main() {
     });
     
     subscription.on( "started", function() {
-        console.log( "subscription started for 2 seconds - subscriptionId=", subscription.subscriptionId );
+        console.log( "subscription started for 2 seconds - subscriptionId = ", subscription.subscriptionId );
     }).on( "keepalive", function() {
         console.log( "keepalive" );
     }).on( "terminated", function() {
@@ -100,7 +100,7 @@ async function main() {
     );
     
     monitoredItem.on( "changed", ( dataValue: DataValue ) => {
-       console.log( " value has changed : ", dataValue.value.toString() );
+       console.log( "value has changed: ", dataValue.value.toString() );
     });
     
     await timeout( 10000 );
@@ -113,16 +113,16 @@ async function main() {
     
         const result = await session.translateBrowsePath( browsePath );
         const productNameNodeId = result.targets[ 0 ].targetId;
-        console.log( " Product Name nodeId = ", productNameNodeId.toString() );
+        console.log( "Product Name nodeId = ", productNameNodeId.toString() );
 
     // close session
         await session.close();
 
     // disconnecting
         await client.disconnect();
-        console.log( "done !" );
+        console.log( "done!" );
   } catch(err) {
-    console.log( "An error has occured : ", err );
+    console.log( "An error has occured: ", err );
   }
 }
 main();
