@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^8.2.0",
     "node-opcua": "^2.4.1",
     "node-opcua-client": "^2.4.0",
     "ts-node": "^8.5.4"
