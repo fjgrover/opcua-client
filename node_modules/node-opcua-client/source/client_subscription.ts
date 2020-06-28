@@ -6,13 +6,14 @@
 import { EventEmitter } from "events";
 
 import { DiagnosticInfo } from "node-opcua-data-model";
-import { ErrorCallback } from "node-opcua-secure-channel";
 import { ReadValueIdOptions, TimestampsToReturn } from "node-opcua-service-read";
 import {
     MonitoringParametersOptions,
     NotificationMessage
 } from "node-opcua-service-subscription";
 import { StatusCode } from "node-opcua-status-code";
+import { ErrorCallback } from "node-opcua-status-code";
+
 import { ClientMonitoredItem } from "./client_monitored_item";
 import { ClientMonitoredItemBase } from "./client_monitored_item_base";
 import { ClientMonitoredItemGroup } from "./client_monitored_item_group";
@@ -45,7 +46,16 @@ export interface ClientSubscription extends EventEmitter {
     monitoredItems: ClientMonitoredItemBaseMap;
     timeoutHint: number;
 
+    /**
+     * return the session associated with the subscription.
+     * (may throw if the session is not valid)
+     */
     session: ClientSession;
+
+    /**
+     * return true if the subscription is attached to a valid session
+     */
+    hasSession: boolean;
 
     /**
      * true is the subscription is fully active

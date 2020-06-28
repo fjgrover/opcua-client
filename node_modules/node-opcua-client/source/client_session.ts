@@ -12,7 +12,7 @@ import { LocalizedTextLike } from "node-opcua-data-model";
 import { DataValue } from "node-opcua-data-value";
 import { NodeId, NodeIdLike } from "node-opcua-nodeid";
 import { IBasicSession } from "node-opcua-pseudo-session";
-import { ErrorCallback } from "node-opcua-secure-channel";
+import { ErrorCallback } from "node-opcua-status-code";
 import {
     BrowseDescription, BrowseDescriptionOptions, BrowseRequest, BrowseResponse, BrowseResult
 } from "node-opcua-service-browse";
@@ -34,6 +34,7 @@ import {
     CreateSubscriptionRequestOptions, CreateSubscriptionResponse,
     DeleteMonitoredItemsRequest,
     DeleteMonitoredItemsRequestOptions,
+    DeleteMonitoredItemsResponse,
     DeleteSubscriptionsRequest,
     DeleteSubscriptionsRequestOptions, DeleteSubscriptionsResponse,
     ModifyMonitoredItemsRequest,
@@ -45,7 +46,8 @@ import {
     SetMonitoringModeRequest, SetMonitoringModeRequestOptions,
     SetMonitoringModeResponse,
     TransferSubscriptionsRequest,
-    TransferSubscriptionsRequestOptions, TransferSubscriptionsResponse
+    TransferSubscriptionsRequestOptions,
+    TransferSubscriptionsResponse
 } from "node-opcua-service-subscription";
 import {
     BrowsePath, BrowsePathResult
@@ -55,6 +57,8 @@ import {
 } from "node-opcua-service-write";
 import { StatusCode } from "node-opcua-status-code";
 import { DataType, Variant } from "node-opcua-variant";
+import { Callback } from "node-opcua-status-code";
+
 import { ClientSubscription } from "./client_subscription";
 
 export type ResponseCallback<T> = (err: Error | null, response?: T) => void;
@@ -80,25 +84,26 @@ export interface CreateSubscriptionOptions {
     priority?: UInt8;
 }
 
-export type BrowseDescriptionLike = string | BrowseDescriptionOptions | BrowseDescription;
-export type ReadValueIdLike = ReadValueIdOptions | ReadValueId;
-export type WriteValueLike = WriteValueOptions | WriteValue;
-export type DeleteMonitoredItemsRequestLike = DeleteMonitoredItemsRequestOptions | DeleteMonitoredItemsRequest;
-export type CreateSubscriptionRequestLike = CreateSubscriptionRequestOptions | CreateSubscriptionRequest;
-export type DeleteSubscriptionsRequestLike = DeleteSubscriptionsRequestOptions | DeleteSubscriptionsRequest;
-export type TransferSubscriptionsRequestLike = TransferSubscriptionsRequestOptions | TransferSubscriptionsRequest;
-export type CreateMonitoredItemsRequestLike = CreateMonitoredItemsRequestOptions | CreateMonitoredItemsRequest;
-export type ModifyMonitoredItemsRequestLike = ModifyMonitoredItemsRequestOptions | ModifyMonitoredItemsRequest;
-export type ModifySubscriptionRequestLike = ModifySubscriptionRequestOptions | ModifySubscriptionRequest;
-export type SetMonitoringModeRequestLike = SetMonitoringModeRequestOptions | SetMonitoringModeRequest;
-export type QueryFirstRequestLike = QueryFirstRequestOptions | QueryFirstRequest;
+export type BrowseDescriptionLike = string | BrowseDescriptionOptions;
+export type ReadValueIdLike = ReadValueIdOptions;
+export type WriteValueLike = WriteValueOptions;
+export type DeleteMonitoredItemsRequestLike = DeleteMonitoredItemsRequestOptions;
+export type CreateSubscriptionRequestLike = CreateSubscriptionRequestOptions;
+export type DeleteSubscriptionsRequestLike = DeleteSubscriptionsRequestOptions;
+export type TransferSubscriptionsRequestLike = TransferSubscriptionsRequestOptions;
+export type CreateMonitoredItemsRequestLike = CreateMonitoredItemsRequestOptions;
+export type ModifyMonitoredItemsRequestLike = ModifyMonitoredItemsRequestOptions;
+export type ModifySubscriptionRequestLike = ModifySubscriptionRequestOptions;
+export type SetMonitoringModeRequestLike = SetMonitoringModeRequestOptions;
+export type QueryFirstRequestLike = QueryFirstRequestOptions;
 
 export type SubscriptionId = number;
 
 import { ExtraDataTypeManager } from "node-opcua-client-dynamic-extension-object";
 import { ExtensionObject } from "node-opcua-extension-object";
 import { ArgumentDefinition, CallMethodRequestLike, MethodId } from "node-opcua-pseudo-session";
-import { Callback } from "./common";
+import { AggregateFunction } from "node-opcua-aggregates";
+import { HistoryReadValueIdOptions } from "node-opcua-types";
 export { ExtraDataTypeManager } from "node-opcua-client-dynamic-extension-object";
 export { ExtensionObject } from "node-opcua-extension-object";
 export { ArgumentDefinition, CallMethodRequestLike, MethodId } from "node-opcua-pseudo-session";
@@ -459,6 +464,16 @@ export interface ClientSessionRawSubscriptionService {
         subscriptionId: SubscriptionId,
         callback: ResponseCallback<MonitoredItemData>
     ): void;
+
+    deleteMonitoredItems(
+        request: DeleteMonitoredItemsRequestLike,
+        callback: Callback<DeleteMonitoredItemsResponse>
+    ): void;
+
+    deleteMonitoredItems(
+        request: DeleteMonitoredItemsRequestLike
+    ): Promise<DeleteMonitoredItemsResponse>;
+
 }
 
 // subscription service
@@ -502,6 +517,64 @@ export interface ClientSessionReadHistoryService {
         end: DateTime
     ): Promise<HistoryReadResult>;
 
+    /**
+     * @method readAggregateValue
+     * @async
+     *
+     * @example
+     *
+     * ```javascript
+     * //  es5
+     * session.readAggregateValue(
+     *   "ns=5;s=Simulation Examples.Functions.Sine1",
+     *   "2015-06-10T09:00:00.000Z",
+     *   "2015-06-10T09:01:00.000Z", AggregateFunction.Average, 3600000, function(err,dataValues) {
+     *
+     * });
+     * ```
+     *
+     * ```javascript
+     * //  es6
+     * const dataValues = await session.readAggregateValue(
+     *   "ns=5;s=Simulation Examples.Functions.Sine1",
+     *   "2015-06-10T09:00:00.000Z",
+     *   "2015-06-10T09:01:00.000Z", AggregateFunction.Average, 3600000);
+     * ```
+     * @param nodes   the read value id
+     * @param startTime   the start time in UTC format
+     * @param endTime     the end time in UTC format
+     * @param aggregateFn
+     * @param processingInterval in milliseconds
+     * @param callback
+     */
+    readAggregateValue(
+        nodes: HistoryReadValueIdOptions[],
+        startTime: DateTime,
+        endTime: DateTime,
+        aggregateFn: AggregateFunction,
+        processingInterval: number,
+        callback: Callback<HistoryReadResult[]>): void;
+    readAggregateValue(
+        nodes: HistoryReadValueIdOptions[],
+        startTime: DateTime,
+        endTime: DateTime,
+        aggregateFn: AggregateFunction,
+        processingInterval: number,
+    ): Promise<HistoryReadResult[]>;
+    readAggregateValue(
+        nodes: HistoryReadValueIdOptions,
+        startTime: DateTime,
+        endTime: DateTime,
+        aggregateFn: AggregateFunction,
+        processingInterval: number,
+        callback: Callback<HistoryReadResult>): void;
+    readAggregateValue(
+        nodes: HistoryReadValueIdOptions,
+        startTime: DateTime,
+        endTime: DateTime,
+        aggregateFn: AggregateFunction,
+        processingInterval: number,
+    ): Promise<HistoryReadResult>;
 }
 
 export interface ClientSessionDataTypeService {

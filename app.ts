@@ -5,6 +5,7 @@ import {
     AttributeIds,
 } from 'node-opcua';
 
+const axios = require( 'axios' );
 require( 'dotenv' ).config();
 
 const connectionStrategy = {
@@ -54,6 +55,11 @@ async function main() {
             
             const json = JSON.stringify( deviceVars );
             console.log( json );
+            axios({
+                method: 'post',
+                url: '/',
+                data: json
+            });
             
             await timeout( parseInt( process.env.TIMEOUT_MS ) );
         }

@@ -355,20 +355,22 @@ export class DataValue extends BaseUAObject {
         + w((picoseconds % 1000) >> 0);
       //    + " (" + picoseconds+ ")";
     }
+    function d(timestamp: Date | null, picoseconds: number): string {
+      return (timestamp ? timestamp.toISOString()
+        + " $ " + toMicroNanoPico(picoseconds)
+        : "null"); // + "  " + (this.serverTimestamp ? this.serverTimestamp.getTime() :"-");
 
-    let str = "DataValue:";
-    if (this.value) {
-      str += "\n   value:           " + Variant.prototype.toString.apply(this.value); // this.value.toString();
-    } else {
-      str += "\n   value:            <null>";
     }
-    str += "\n   statusCode:      " + (this.statusCode ? this.statusCode.toString() : "null");
-    str += "\n   serverTimestamp: " + (this.serverTimestamp ? this.serverTimestamp.toISOString()
-      + " $ " + toMicroNanoPico(this.serverPicoseconds)
-      : "null"); // + "  " + (this.serverTimestamp ? this.serverTimestamp.getTime() :"-");
-    str += "\n   sourceTimestamp: " + (this.sourceTimestamp ? this.sourceTimestamp.toISOString()
-      + " $ " + toMicroNanoPico(this.sourcePicoseconds)
-      : "null"); // + "  " + (this.sourceTimestamp ? this.sourceTimestamp.getTime() :"-");
+    let str = "{ /* DataValue */";
+    if (this.value) {
+      str += "\n" + "   value: " + Variant.prototype.toString.apply(this.value); // this.value.toString();
+    } else {
+      str += "\n" + "   value:            <null>";
+    }
+    str += "\n" + "   statusCode:      " + (this.statusCode ? this.statusCode.toString() : "null");
+    str += "\n" + "   serverTimestamp: " + d(this.serverTimestamp, this.serverPicoseconds)
+    str += "\n" + "   sourceTimestamp: " + d(this.sourceTimestamp, this.sourcePicoseconds);
+    str += "\n" + "}";
     return str;
   }
 
@@ -410,7 +412,7 @@ export function apply_timestamps(
   assert(dataValue.hasOwnProperty("serverTimestamp"));
   assert(dataValue.hasOwnProperty("sourceTimestamp"));
 
-  let cloneDataValue = null;
+  let cloneDataValue: DataValue | null = null;
   let now = null;
   // apply timestamps
   switch (timestampsToReturn) {
@@ -421,27 +423,28 @@ export function apply_timestamps(
       cloneDataValue = cloneDataValue || _partial_clone(dataValue);
       cloneDataValue.serverTimestamp = dataValue.serverTimestamp;
       cloneDataValue.serverPicoseconds = dataValue.serverPicoseconds;
-      if (!cloneDataValue.serverTimestamp) {
-        now = now || getCurrentClock();
-        cloneDataValue.serverTimestamp = now.timestamp as DateTime;
-        cloneDataValue.serverPicoseconds = now.picoseconds;
-      }
+      // xx if (!cloneDataValue.serverTimestamp) {
+      now = now || getCurrentClock();
+      cloneDataValue.serverTimestamp = now.timestamp as DateTime;
+      cloneDataValue.serverPicoseconds = now.picoseconds;
+      // xx }
       break;
     case TimestampsToReturn.Source:
       cloneDataValue = cloneDataValue || _partial_clone(dataValue);
       cloneDataValue.sourceTimestamp = dataValue.sourceTimestamp;
       cloneDataValue.sourcePicoseconds = dataValue.sourcePicoseconds;
       break;
+    case TimestampsToReturn.Both:
     default:
       assert(timestampsToReturn === TimestampsToReturn.Both);
       cloneDataValue = cloneDataValue || _partial_clone(dataValue);
       cloneDataValue.serverTimestamp = dataValue.serverTimestamp;
       cloneDataValue.serverPicoseconds = dataValue.serverPicoseconds;
-      if (!cloneDataValue.serverTimestamp) {
-        now = now || getCurrentClock();
-        cloneDataValue.serverTimestamp = now.timestamp as DateTime;
-        cloneDataValue.serverPicoseconds = now.picoseconds;
-      }
+      //xx if (!cloneDataValue.serverTimestamp) {
+      now = now || getCurrentClock();
+      cloneDataValue.serverTimestamp = now.timestamp as DateTime;
+      cloneDataValue.serverPicoseconds = now.picoseconds;
+      //xx }
       cloneDataValue.sourceTimestamp = dataValue.sourceTimestamp;
       cloneDataValue.sourcePicoseconds = dataValue.sourcePicoseconds;
       break;

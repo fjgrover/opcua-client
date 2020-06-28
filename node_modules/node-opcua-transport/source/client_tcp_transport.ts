@@ -3,12 +3,15 @@
  */
 // tslint:disable:class-name
 // system
+import * as os from "os";
+import * as _ from "underscore";
+
 import { createConnection, Socket } from "net";
 import { assert } from "node-opcua-assert";
 import { BinaryStream } from "node-opcua-binary-stream";
 import { readMessageHeader } from "node-opcua-chunkmanager";
-import * as os from "os";
-import * as _ from "underscore";
+import { ErrorCallback } from "node-opcua-status-code";
+
 import { getFakeTransport, TCP_transport } from "./tcp_transport";
 import { decodeMessage, packTcpMessage, parseEndpointUrl } from "./tools";
 
@@ -21,7 +24,6 @@ const doDebug = debug.checkDebugFlag(__filename);
 const debugLog = debug.make_debugLog(__filename);
 const gHostname = os.hostname();
 
-export type ErrorCallback = (err?: Error) => void;
 
 function createClientSocket(endpointUrl: string): Socket {
     // create a socket based on Url
@@ -95,9 +97,9 @@ export class ClientTCP_transport extends TCP_transport {
     public endpointUrl: string;
     public serverUri: string;
     public numberOfRetry: number;
+    public parameters?: AcknowledgeMessage;
 
     private connected: boolean;
-    private parameters?: any;
     private _counter: number;
 
     constructor() {
@@ -140,7 +142,6 @@ export class ClientTCP_transport extends TCP_transport {
             }
             return callback(err);
         }
-
 
         const _on_socket_error_after_connection = (err: Error) => {
             /* istanbul ignore next */
@@ -265,7 +266,7 @@ export class ClientTCP_transport extends TCP_transport {
             responseClass = AcknowledgeMessage;
             _stream.rewind();
             response = decodeMessage(_stream, responseClass);
-            this.parameters = response;
+            this.parameters = response as AcknowledgeMessage;
             callback();
         }
 

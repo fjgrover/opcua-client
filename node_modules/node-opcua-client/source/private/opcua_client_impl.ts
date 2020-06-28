@@ -32,7 +32,6 @@ import {
 } from "node-opcua-hostname";
 import {
     ClientSecureChannelLayer, computeSignature, ConnectionStrategyOptions,
-    ErrorCallback,
     fromURI,
     getCryptoFactory,
     SecurityPolicy
@@ -56,6 +55,10 @@ import {
     X509IdentityToken
 } from "node-opcua-service-session";
 import { StatusCodes } from "node-opcua-status-code";
+import {
+    ErrorCallback,
+} from "node-opcua-status-code";
+
 import { SignatureData, SignatureDataOptions, UserIdentityToken } from "node-opcua-types";
 import { isNullOrUndefined } from "node-opcua-utils";
 
@@ -70,7 +73,8 @@ import {
     UserIdentityInfoUserName,
     UserIdentityInfoX509,
     WithSessionFuncP,
-    WithSubscriptionFuncP
+    WithSubscriptionFuncP,
+    EndpointWithUserIdentity
 } from "../opcua_client";
 import { repair_client_sessions } from "../reconnection";
 import { ClientBaseImpl } from "./client_base_impl";
@@ -317,10 +321,7 @@ function createUserNameIdentityToken(
     return identityToken;
 }
 
-export interface EndpointWithUserIdentity {
-    endpointUrl: string;
-    userIdentity: UserIdentityInfo;
-}
+
 
 /***
  *
@@ -679,9 +680,11 @@ export class OPCUAClientImpl extends ClientBaseImpl implements OPCUAClient {
                 result = await func(session);
             } catch (err) {
                 errorLog(err);
+                throw err;
+            } finally {
+                await session.close();
+                await this.disconnect();
             }
-            await session.close();
-            await this.disconnect();
             return result;
         } catch (err) {
             throw err;
@@ -711,12 +714,12 @@ export class OPCUAClientImpl extends ClientBaseImpl implements OPCUAClient {
             try {
                 const result = await func(session, subscription);
                 return result;
-            } catch {
-                return undefined;
+            } catch (err) {
+                console.log("withSubscriptionAsync inner functon failed ", err.message);
+                throw err;
             } finally {
                 await subscription.terminate();
             }
-
         });
     }
 
@@ -1302,7 +1305,11 @@ OPCUAClientImpl.prototype.disconnect = thenify.withCallback(OPCUAClientImpl.prot
  *
  * @example
  *     // create a session with a userName and password
- *     const userIdentityInfo  = {UserTokenType.UserName, userName: "JoeDoe", password:"secret"};
+ *     const userIdentityInfo  = {
+ *          type: UserTokenType.UserName,
+ *          userName: "JoeDoe",
+ *          password:"secret"
+ *     };
  *     const session = client.createSession(userIdentityInfo);
  *
  */
