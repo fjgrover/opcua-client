@@ -55,11 +55,8 @@ async function main() {
             
             const json = JSON.stringify( deviceVars );
             console.log( json );
-            axios({
-                method: 'post',
-                url: 'http://192.168.1.5/',
-                data: json
-            });
+            const instance = axios.create({baseURL: 'http://192.168.1.5:5000'});
+            instance.post( json );
             
             await timeout( parseInt( process.env.TIMEOUT_MS ) );
         }
