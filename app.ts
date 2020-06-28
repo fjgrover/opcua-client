@@ -46,6 +46,10 @@ async function main() {
             nodesToRead.push( { nodeId: element.nodeId.toString(), attributeId: AttributeIds.Value } );
         });
 
+        const instance = axios.create( {
+            baseURL: process.env.SERVER_URL
+        });
+
         while ( true ) {
             const dataValue =  await session.readVariableValue( nodesToRead );
 
@@ -55,10 +59,6 @@ async function main() {
             
             const json = JSON.stringify( deviceVars );
             console.log( json );
-            const instance = axios.create( {
-                baseURL: 'http://192.168.1.5:5000',
-                rejectUnauthorized: false
-            });
             instance.post( json );
             
             await timeout( parseInt( process.env.TIMEOUT_MS ) );
