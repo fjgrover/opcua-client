@@ -57,7 +57,7 @@ async function main() {
             console.log( json );
             axios({
                 method: 'post',
-                url: '/',
+                url: 'http://192.168.1.5/',
                 data: json
             });
             
