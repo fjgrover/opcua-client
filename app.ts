@@ -6,6 +6,7 @@ import {
 } from 'node-opcua';
 
 const axios = require( 'axios' );
+const https = require( 'https' );
 require( 'dotenv' ).config();
 
 const connectionStrategy = {
@@ -46,8 +47,11 @@ async function main() {
             nodesToRead.push( { nodeId: element.nodeId.toString(), attributeId: AttributeIds.Value } );
         });
 
-        const instance = axios.create( {
-            baseURL: process.env.SERVER_URL
+        const instance = axios.create({
+            baseURL: process.env.SERVER_URL,
+            httpsAgent: new https.Agent({
+                rejectUnauthorized: false
+            })
         });
 
         while ( true ) {
