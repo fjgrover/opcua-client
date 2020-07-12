@@ -59,7 +59,6 @@ async function main() {
             }
             
             const json = JSON.stringify( deviceVars );
-
             axios.post( process.env.SERVER_URL, json, { httpsAgent } );
 
             await timeout( parseInt( process.env.TIMEOUT_MS ) );
