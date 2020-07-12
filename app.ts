@@ -5,8 +5,8 @@ import {
     AttributeIds,
 } from 'node-opcua';
 
-const axios = require( 'axios' );
 const https = require( 'https' );
+const axios = require( 'axios' );
 require( 'dotenv' ).config();
 
 const connectionStrategy = {
@@ -32,6 +32,10 @@ async function main() {
     };
 
     try {
+        const httpsAgent = new https.Agent({
+            rejectUnauthorized: false
+        });
+
         await client.connect( endpointUrl );
         console.log( 'connected' );
 
@@ -47,13 +51,6 @@ async function main() {
             nodesToRead.push( { nodeId: element.nodeId.toString(), attributeId: AttributeIds.Value } );
         });
 
-        const instance = axios.create({
-            baseURL: process.env.SERVER_URL,
-            httpsAgent: new https.Agent({
-                rejectUnauthorized: false
-            })
-        });
-
         while ( true ) {
             const dataValue =  await session.readVariableValue( nodesToRead );
 
@@ -62,9 +59,9 @@ async function main() {
             }
             
             const json = JSON.stringify( deviceVars );
-            console.log( json );
-            instance.post( json );
-            
+
+            axios.post( process.env.SERVER_URL, json, { httpsAgent } );
+
             await timeout( parseInt( process.env.TIMEOUT_MS ) );
         }
     } catch ( err ) {
